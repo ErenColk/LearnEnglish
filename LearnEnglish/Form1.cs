@@ -31,13 +31,15 @@ namespace LearnEnglish
         List<TurkishWord> _turkishWords;
         List<EnglishWord> _englishWords;
         List<EnglishWord> unkownEnglishWord;
+        List<TurkishWord> unkownTurkishWord;
 
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            unkownEnglishWord = new List<EnglishWord>();
             _turkishWords = new List<TurkishWord>();
             _englishWords = new List<EnglishWord>();
+            unkownTurkishWord = new List<TurkishWord>();
+            unkownEnglishWord = new List<EnglishWord>();
 
             _englishWords.AddRange(dbContext.EnglishWords);
             _turkishWords.AddRange(dbContext.TurkishWords);
@@ -54,9 +56,12 @@ namespace LearnEnglish
             //btnAddUnkown.Enabled = false;
 
             lblRemainingWord.Text = dbContext.EnglishWords.Count().ToString();
+            lblUnkownWords.Text = "0";
 
             btnShowTurkishWord.Enabled = false;
             btnAddUnkown.Enabled = false;
+            btnStartOver.Enabled = false;
+            btnShowUnkownWord.Enabled = false;
 
         }
 
@@ -853,43 +858,45 @@ namespace LearnEnglish
         private void btnShowEnglishWord_Click(object sender, EventArgs e)
         {
             btnAddUnkown.Enabled = true;
+            btnStartOver.Enabled = true;
+            
+      
+                if (!DidItChange)
+                {
+                    selectedWord = random.Next(0, _englishWords.Count);
+                    englishWord = _englishWords[selectedWord];
+                    lblEnglish.Text = englishWord.Word;
+                    englishSentence = englishWord.Sentence;
+                    _englishWords.Remove(englishWord);
 
+                    btnShowEnglishWord.Enabled = false;
 
-            if (!DidItChange)
-            {
-                selectedWord = random.Next(0, _englishWords.Count);
+                    if (_turkishWords.Count != 0)
+                        btnShowTurkishWord.Enabled = true;
 
-                englishWord = _englishWords[selectedWord];
-                lblEnglish.Text = englishWord.Word;
-                englishSentence = englishWord.Sentence;
-                _englishWords.Remove(englishWord);
+                    turkishWord = _turkishWords[selectedWord];
+                    turkishSentence = turkishWord.Sentence;
+                    pronunciation = turkishWord.Pronunciation;
 
+                    lblRemainingWord.Text = _englishWords.Count.ToString();
+                }
+                else
+                {
+                    if (_turkishWords.Count != 0)
+                        btnShowTurkishWord.Enabled = true;
 
-                btnShowEnglishWord.Enabled = false;
+                    lblEnglish.Text = englishWord.Word;
+                    _englishWords.Remove(englishWord);
 
-                if (_turkishWords.Count != 0)
-                    btnShowTurkishWord.Enabled = true;
+                }
 
-                turkishWord = _turkishWords[selectedWord];
-                turkishSentence = turkishWord.Sentence;
-                pronunciation = turkishWord.Pronunciation;
-
-                lblRemainingWord.Text = _englishWords.Count.ToString();
-            }
-            else
-            {
-                if (_turkishWords.Count != 0)
-                    btnShowTurkishWord.Enabled = true;
-
-                lblEnglish.Text = englishWord.Word;
-                _englishWords.Remove(englishWord);
-
-            }
-
+            
+       
 
             if (_englishWords.Count == 0)
             {
                 btnShowEnglishWord.Enabled = false;
+
             }
 
         }
@@ -897,37 +904,62 @@ namespace LearnEnglish
         // TURKCE KELİEMELERİ GÖSTER
         private void btnShowTurkishWord_Click(object sender, EventArgs e)
         {
-            if (DidItChange)
+
+            btnStartOver.Enabled = true;
+
+
+            if (!showingUnkownWords)
             {
-                selectedWord = random.Next(0, _turkishWords.Count);
+                if (DidItChange)
+                {
+                    selectedWord = random.Next(0, _turkishWords.Count);
 
-                turkishWord = _turkishWords[selectedWord];
-                lblTurkish.Text = turkishWord.Word;
-                turkishSentence = turkishWord.Sentence;
-                _turkishWords.Remove(turkishWord);
+                    turkishWord = _turkishWords[selectedWord];
+                    lblTurkish.Text = turkishWord.Word;
+                    turkishSentence = turkishWord.Sentence;
+                    _turkishWords.Remove(turkishWord);
 
-                btnShowTurkishWord.Enabled = false;
+                    btnShowTurkishWord.Enabled = false;
 
 
-                if (_englishWords.Count != 0)
-                    btnShowEnglishWord.Enabled = true;
+                    if (_englishWords.Count != 0)
+                        btnShowEnglishWord.Enabled = true;
 
-                englishWord = _englishWords[selectedWord];
-                englishSentence = englishWord.Sentence;
+                    englishWord = _englishWords[selectedWord];
+                    englishSentence = englishWord.Sentence;
 
-                lblRemainingWord.Text = _turkishWords.Count.ToString();
+                    lblRemainingWord.Text = _turkishWords.Count.ToString();
+                }
+                else
+                {
+                    lblTurkish.Text = turkishWord.Word;
+                    _turkishWords.Remove(turkishWord);
+
+                    btnShowTurkishWord.Enabled = false;
+
+                    if (_englishWords.Count != 0)
+                        btnShowEnglishWord.Enabled = true;
+
+                }
+
+
             }
             else
             {
-                lblTurkish.Text = turkishWord.Word;
-                _turkishWords.Remove(turkishWord);
 
                 btnShowTurkishWord.Enabled = false;
 
-                if (_englishWords.Count != 0)
-                    btnShowEnglishWord.Enabled = true;
+                lblTurkish.Text = turkishWord.Word;
+                unkownTurkishWord.Remove(turkishWord);
+
+                btnShowTurkishWord.Enabled = false;
+
+                if (unkownEnglishWord.Count != 0)
+                    btnShowUnkownWord.Enabled = true;
+
 
             }
+
 
 
             if (_turkishWords.Count == 0)
@@ -970,17 +1002,19 @@ namespace LearnEnglish
             }
         }
 
-
-
-
         private void btnStartOver_Click(object sender, EventArgs e)
         {
 
             _turkishWords = new List<TurkishWord>();
             _englishWords = new List<EnglishWord>();
+            unkownTurkishWord = new List<TurkishWord>();
+            unkownEnglishWord = new List<EnglishWord>();
 
             _englishWords.AddRange(dbContext.EnglishWords);
             _turkishWords.AddRange(dbContext.TurkishWords);
+
+          showingUnkownWords = false;
+
 
 
             if (!DidItChange)
@@ -1003,20 +1037,35 @@ namespace LearnEnglish
             }
 
             lblRemainingWord.Text = _englishWords.Count.ToString();
+
+            lblUnkownWords.Text = "0";
+
             btnEnglishExampleSentence.Enabled = true;
             btnTurkishExampleSentence.Enabled = true;
             btnShowEnglishWord.Enabled = true;
             btnPronunciation.Enabled = true;
             btnAddUnkown.Enabled = true;
+            btnShowUnkownWord.Enabled = false;
+
 
 
         }
 
 
+        bool showingUnkownWords = false;
         private void btnAddUnkown_Click(object sender, EventArgs e)
         {
-            unkownEnglishWord.Add(englishWord);
 
+            unkownEnglishWord.Add(englishWord);
+            unkownTurkishWord.Add(turkishWord);
+
+            btnShowUnkownWord.Enabled = true;
+
+
+            lblUnkownWords.Text = unkownEnglishWord.Count.ToString();
+
+            if (_englishWords.Count == 0)
+                btnAddUnkown.Enabled = false;
 
         }
 
@@ -1024,6 +1073,54 @@ namespace LearnEnglish
 
         private void btnShowUnkownWord_Click(object sender, EventArgs e)
         {
+
+            if (!showingUnkownWords)
+            {
+                foreach (Control item in this.Controls)
+                {
+                    if (item is Label)
+                    {
+                        item.Text = "";
+                    }
+                }
+            }
+
+
+            btnShowTurkishWord.Enabled = true;
+            btnShowEnglishWord.Enabled = false;
+            btnEnglishExampleSentence.Enabled = true;
+            btnTurkishExampleSentence.Enabled = true;
+            btnPronunciation.Enabled = true;
+            btnAddUnkown.Enabled= false;
+            lblRemainingWord.Text = "0";
+
+            selectedWord = random.Next(0, unkownEnglishWord.Count);
+
+            englishWord = unkownEnglishWord[selectedWord];
+            lblIDontKnow.Text = englishWord.Word;
+            englishSentence = englishWord.Sentence;
+            unkownEnglishWord.Remove(englishWord);
+
+            btnShowUnkownWord.Enabled = false;
+
+            if (unkownTurkishWord.Count != 0)
+                btnShowTurkishWord.Enabled = true;
+
+            turkishWord = unkownTurkishWord[selectedWord];
+            turkishSentence = turkishWord.Sentence;
+            pronunciation = turkishWord.Pronunciation;
+
+            lblUnkownWords.Text = unkownEnglishWord.Count.ToString();
+
+
+           
+            if (unkownEnglishWord.Count == 0)
+            {
+                showingUnkownWords = false;
+                btnShowUnkownWord.Enabled = false;
+            }
+            showingUnkownWords = true;
+
 
         }
 
